@@ -38,30 +38,26 @@
         server_addr : null,
         server_port : null
     };
-    function ChatClient(custom_config){
+    function WsClient(custom_config){
         // public attr
         this.config = merge(config, custom_config);
         this.ws = null;
         this.ws_event = null;
-        this.event_handlers = [];
 
         this.event = {
-            new_pri_msg : 'new_pri_msg',
-            new_join_chanel : 'new_join_chanel',
-            new_chanel_msg : 'new_chanel_msg',
+            'onopen' : null,
+            'onclose' : null,
+            'onerror' : null
         };
 
-        this.open = null;
-        this.close = null;
-        this.error = null;
         this._init();
     }
     // 初始化函数
-    ChatClient.prototype._init = function(){
+    WsClient.prototype._init = function(){
         // todo检查必要的属性
         this.config.init();
     }
-    ChatClient.prototype.connect = function(){
+    WsClient.prototype.connect = function(){
         this.ws = connect(this.config.server_addr, this.config.server_port);
         this.ws.onopen = on_open(this);
         this.ws.onclose = on_close(this);
@@ -70,7 +66,7 @@
     }
 
 
-    ChatClient.prototype.send = function(route, params, res, header){
+    WsClient.prototype.send = function(route, params, res, header){
         if('function' === typeof res){
             var cb_index = Callback.save(res);
         }
@@ -79,20 +75,32 @@
         });
         send(this.ws, req)
     }
-    ChatClient.prototype.install_event_handler = function(name,  handler){
-        this.event_handlers[name] = handler;
+    WsClient.prototype.install_event_handler = function(name,  handler){
+        this.event[name] = handler;
     }
-    ChatClient.prototype.is_succ = function(status){
+    WsClient.prototype.is_succ = function(status){
         return 1 === status;
     }
-    ChatClient.prototype.is_err = function(status){
+    WsClient.prototype.is_err = function(status){
         return 2 === status;
     }
-    ChatClient.prototype.is_warning = function(status){
+    WsClient.prototype.is_warning = function(status){
         return 3 === status;
     }
-    ChatClient.prototype.is_danger = function(status){
+    WsClient.prototype.is_danger = function(status){
         return 4 === status;
+    }
+    WsClient.prototype.info = function(msg, data){
+        debug("info: " + msg);
+        if(data){
+            debug(data);
+        }
+    }
+    WsClient.prototype.error = function(msg, data){
+        debug("error: " + msg);
+        if(data){
+            debug(data);
+        }
     }
 
 
@@ -108,7 +116,7 @@
                     }
                 }
             }else if (data['event']) {
-                var handler = chat_client.event_handlers[data['event']];
+                var handler = chat_client.event[data['event']];
                 if('function' === typeof handler){
                     handler(chat_client, data);
                 }
@@ -120,24 +128,24 @@
     function on_open(chat_client){
         return function(ws_event){
             this.ws_event = ws_event;
-            if('function' === typeof chat_client.open){
-                chat_client.open();
+            if('function' === typeof chat_client.event.onopen){
+                chat_client.event.onopen.call(chat_client);
             }
         }
     }
     function on_close(chat_client){
         return function(ws_event){
             this.ws_event = ws_event;
-            if('function' === typeof chat_client.close){
-                chat_client.close();
+            if('function' === typeof chat_client.event.onclose){
+                chat_client.event.onclose.call(chat_client);
             }
         }
     }
     function on_error(chat_client){
         return function(ws_event){
             this.ws_event = ws_event;
-            if('function' === typeof chat_client.error){
-                chat_client.error();
+            if('function' === typeof chat_client.event.onerror){
+                chat_client.event.onerror.call(chat_client);
             }
         }
     }
@@ -149,7 +157,9 @@
     function send(ws, data){
         ws.send(JSON.stringify(data));
     }
-
+    function debug(data){
+        console.log(data);
+    }
     function merge(target, source) {
         if ( typeof target !== 'object' ) {
             target = {};
@@ -169,6 +179,5 @@
         }
         return target;
     };
-
-    this.ChatClient = ChatClient;
+    this.WsClient = WsClient;
 })();

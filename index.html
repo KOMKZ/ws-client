@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+    body{
+        width:1000px;
+        margin:100px auto;
+    }
+    pre{
+        background:#eee;
+        padding:10px;
+    }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <h2>Client Programming( A User Login)</h2>
+        <h3>Customizing your config</h3>
+        <hr>
+        <pre>
+var config = {
+    init : function(){},
+    server_addr : '127.0.0.1',
+    server_port : '7272',
+};
+        </pre>
+
+        <h3>Write your app logic</h3>
+        <hr>
+        <pre>
+// function of user login
+function login(user_id, user_token){
+    // ...
+}
+
+// the handler for logining failed
+function on_login_fail(client, res){
+    // ...
+}
+
+// the handler for logining successfully
+function on_login_succ(client, res){
+    // ...
+}
+        </pre>
+
+        <h3>2. Inneracting with ws-server</h3>
+        <hr>
+        <pre>
+var client = new WsClient(config);
+
+client.connect();
+
+client.send('index/login', {
+    user_id : 1,
+    user_token : 'hello world'
+}, on_login_succ, on_login_fail);
+        </pre>
+    </div>
+    <footer>
+    <div>
+<p><a href="demo.html">Demo Page Here</a></p>
+    </div>
+
+    </footer>
+</body>
+</html>
