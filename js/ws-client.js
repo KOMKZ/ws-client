@@ -25,6 +25,10 @@
             }
         }
     }
+    var Eve = function(name, handler){
+        this.name = name;
+        this.handler = handler;
+    }
     var Request = function(route, params, header){
         this.route = route;
         this.params = params;
@@ -38,17 +42,20 @@
         server_addr : null,
         server_port : null
     };
+    var core_events = {
+        on_server_info : null,
+    };
     function WsClient(custom_config){
         // public attr
         this.config = merge(config, custom_config);
         this.ws = null;
         this.ws_event = null;
 
-        this.event = {
+        this.events = merge(core_events, {
             'onopen' : null,
             'onclose' : null,
             'onerror' : null
-        };
+        });
 
         this._init();
     }
@@ -76,7 +83,8 @@
         send(this.ws, req)
     }
     WsClient.prototype.install_event_handler = function(name,  handler){
-        this.event[name] = handler;
+        var event = new Eve(name, handler);
+        this.events[name] = handler;
     }
     WsClient.prototype.is_succ = function(status){
         return 1 === status;
@@ -104,7 +112,7 @@
     }
 
 
-    function on_response(chat_client){
+    function on_response(client){
         return function(res){
             var data = JSON.parse(res.data);
             if(data['route']){
@@ -112,40 +120,44 @@
                 if(undefined != data.header.cb_index){
                     var func = Callback.get(data.header.cb_index);
                     if('function' === typeof func){
-                        func(chat_client, data);
+                        func(client, data);
                     }
                 }
             }else if (data['event']) {
-                var handler = chat_client.event[data['event']];
-                if('function' === typeof handler){
-                    handler(chat_client, data);
+                var event = client.events[data['event']];
+                if(!event){
+                    // client.error('the event ' + data['event'] + ' you specfied is not exists');
+                    return ;
+                }
+                if('function' === typeof event){
+                    event(client, data);
                 }
             }else{
-                console.log('解析消息出错');
+                client.error('解析消息出错');
             }
         }
     }
-    function on_open(chat_client){
+    function on_open(client){
         return function(ws_event){
             this.ws_event = ws_event;
-            if('function' === typeof chat_client.event.onopen){
-                chat_client.event.onopen.call(chat_client);
+            if('function' === typeof client.events.onopen){
+                client.events.onopen.call(client);
             }
         }
     }
-    function on_close(chat_client){
+    function on_close(client){
         return function(ws_event){
             this.ws_event = ws_event;
-            if('function' === typeof chat_client.event.onclose){
-                chat_client.event.onclose.call(chat_client);
+            if('function' === typeof client.events.onclose){
+                client.events.onclose.call(client);
             }
         }
     }
-    function on_error(chat_client){
+    function on_error(client){
         return function(ws_event){
             this.ws_event = ws_event;
-            if('function' === typeof chat_client.event.onerror){
-                chat_client.event.onerror.call(chat_client);
+            if('function' === typeof client.events.onerror){
+                client.events.onerror.call(client);
             }
         }
     }

@@ -7,10 +7,16 @@ $(function(){
     var client = new WsClient(config);
     client.install_event_handler('onopen', function(){
         this.info('connect successfully');
-        this.send('index/login', {
+
+        client.send('index/login', {
             user_id : 1,
             user_token : 2
+        }, function(c, res){
+            c.info('trigger success callback');
+        }, function(c, res){
+            c.info('trigger error callback');
         });
+
     });
     client.install_event_handler('onerror', function(){
         this.error('someting wrong', this.ws);
@@ -22,6 +28,11 @@ $(function(){
             client.connect();
         }, 20000);
     });
+    client.install_event_handler('on_server_info', function(c, data){
+        c.info('receive system message :', data);
+    });
     client.connect();
+
+
 
 });
