@@ -1,4 +1,7 @@
 $(function(){
+    var app_settings = {
+        reconn_interval : 1000
+    }
     var config = {
         init : function(){},
         server_addr : '127.0.0.1',
@@ -23,10 +26,10 @@ $(function(){
     });
     client.install_event_handler('onclose', function(){
         this.info('the connection has offlined');
-        this.info('reconnect from 20 sec');
+        this.info('reconnect from '+app_settings.reconn_interval+' sec');
         setTimeout(function(){
             client.connect();
-        }, 20000);
+        }, app_settings.reconn_interval);
     });
     client.install_event_handler('on_server_info', function(c, data){
         c.info('receive system message :', data);
