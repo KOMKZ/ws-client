@@ -33,7 +33,9 @@
         this.route = route;
         this.params = params;
         var default_header = {
-            cb_index : null
+            cb_index : null,
+            auth_type : 'rbac',
+            auth_token : null,
         }
         this.header = merge(default_header, header);
     }
@@ -73,13 +75,13 @@
     }
 
 
-    WsClient.prototype.send = function(route, params, res, header){
-        if('function' === typeof res){
-            var cb_index = Callback.save(res);
+    WsClient.prototype.send = function(route, params, callback, header){
+        if('function' === typeof callback){
+            var cb_index = Callback.save(callback);
         }
-        var req = new Request(route, params, {
+        var req = new Request(route, params, merge(header, {
             cb_index : cb_index,
-        });
+        }));
         send(this.ws, req)
     }
     WsClient.prototype.install_event_handler = function(name,  handler){
