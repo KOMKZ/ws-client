@@ -5,7 +5,9 @@ $(function(){
     var config = {
         init : function(){},
         server_addr : '127.0.0.1',
-        server_port : '7272'
+        server_port : '7272',
+        // auth_type : 'token',//WsClient.cons.token_auth,
+        // auth_token : 'ODVhNWEwM2FkOTlmYzc2YTE3YjdhYzI3ZmJlMDM0Mjk5YWVhMGUyOA=='
     };
     var client = new WsClient(config);
     client.install_event_handler('onopen', function(){
@@ -14,13 +16,10 @@ $(function(){
             user_id : 1,
             user_token : 2
         }, function(c, res){
-            c.info('trigger success callback');
+            c.info('trigger callback');
             if(c.is_err(res.body.status)){
                 c.error(res.body.message);
             }
-        }, {
-            'auth_type' : 'token',
-            'auth_token' : 'ODVhNWEwM2FkOTlmYzc2YTE3YjdhYzI3ZmJlMDM0Mjk5YWVhMGUyOA==' 
         });
 
     });

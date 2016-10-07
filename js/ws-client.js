@@ -1,4 +1,8 @@
 (function(){
+    var _CONST = {
+        rbac_auth : 'rbac',
+        token_auth : 'token'
+    };
     var Callback = {
         max : -1,
         valid : [],
@@ -17,13 +21,18 @@
         get : function(index){
             if(undefined != this.box[index]){
                 var func = this.box[index];
-                this.box[index] = null;
+                this.box[index] = undefined;
                 this.valid.push(index);
                 return func;
             }else{
                 return undefined;
             }
         }
+    }
+    var default_header = {
+        cb_index : undefined,
+        auth_type : _CONST.rbac_auth,
+        auth_token : undefined,
     }
     var Eve = function(name, handler){
         this.name = name;
@@ -32,31 +41,28 @@
     var Request = function(route, params, header){
         this.route = route;
         this.params = params;
-        var default_header = {
-            cb_index : null,
-            auth_type : 'rbac',
-            auth_token : null,
-        }
         this.header = merge(default_header, header);
     }
     var config = {
         init : function(){},
-        server_addr : null,
-        server_port : null
+        server_addr : undefined,
+        server_port : undefined,
+        auth_type : _CONST.rbac_auth,
+        auth_token : undefined,
     };
     var core_events = {
-        on_server_info : null,
+        on_server_info : undefined,
     };
     function WsClient(custom_config){
         // public attr
         this.config = merge(config, custom_config);
-        this.ws = null;
-        this.ws_event = null;
+        this.ws = undefined;
+        this.ws_event = undefined;
 
         this.events = merge(core_events, {
-            'onopen' : null,
-            'onclose' : null,
-            'onerror' : null
+            'onopen' : undefined,
+            'onclose' : undefined,
+            'onerror' : undefined
         });
 
         this._init();
@@ -82,6 +88,8 @@
         var req = new Request(route, params, merge(header, {
             cb_index : cb_index,
         }));
+        req.header.auth_type = this.config.auth_type;
+        req.header.auth_token = this.config.auth_token;
         send(this.ws, req)
     }
     WsClient.prototype.install_event_handler = function(name,  handler){
@@ -194,4 +202,5 @@
         return target;
     };
     this.WsClient = WsClient;
+    this.WsClient.cons = _CONST;
 })();
